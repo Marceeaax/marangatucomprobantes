@@ -1,35 +1,15 @@
-from datetime import datetime, timedelta
+import calculos
 import selenium
+import time
+import os
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import Select
 
-def calcularfechas(start_date_str, end_date_str):
-    # Convert date strings to datetime objects
-    start_date = datetime.strptime(start_date_str, '%d/%m/%Y')
-    end_date = datetime.strptime(end_date_str, '%d/%m/%Y')
-
-    # Initialize list to hold month ranges
-    month_ranges = []
-
-    # Loop over each month between the start and end dates
-    current_month = start_date
-
-    while current_month <= end_date:
-        # Get the last day of the current month
-        next_month = current_month.replace(day=28) + timedelta(days=4)
-        last_day = next_month - timedelta(days=next_month.day)
-
-        # Append the first and last day of the current month to the list of month ranges
-        month_ranges.append((current_month.strftime('%d/%m/%Y'), last_day.strftime('%d/%m/%Y')))
-
-        # Move to the next month
-        current_month = next_month.replace(day=1)
-
-    return month_ranges
 
 url = "https://marangatu.set.gov.py/eset/login"
 
@@ -40,6 +20,7 @@ desde = "01/01/2022"
 hasta = "31/03/2022"
 
 opciones = ['COMPRAS', 'VENTAS', 'INGRESOS', 'EGRESOS']
+opcionelegida = 'COMPRAS'
 
 driver = webdriver.Chrome(ChromeDriverManager().install())
 driver.get(url)
@@ -61,8 +42,47 @@ elem4.click()
 elem5 = WebDriverWait(driver, 0).until(EC.presence_of_element_located((By.XPATH, "/html/body/div/div/div/div/div[2]/div/div[1]/div/div/div/div/section/div/div/div[2]/div/div/div[5]/div/div")))
 elem5.click()
 
+fechas = calculos.calcularfechas(desde, hasta)
 
-# wait until the page has loaded
+parent_window = driver.current_window_handle
+all_windows = driver.window_handles
+driver.switch_to.window(all_windows[1])
+
+elem6 = WebDriverWait(driver, 0).until(EC.presence_of_element_located((By.XPATH, "/html/body/div/div/div[2]/div/div/div[2]/div/div/section[1]/div/div/form/div/div/div[2]/div[1]/div/div/input")))
+
+elem7 = WebDriverWait(driver, 0).until(EC.presence_of_element_located((By.XPATH, "/html/body/div/div/div[2]/div/div/div[2]/div/div/section[1]/div/div/form/div/div/div[2]/div[2]/div/div/input")))
+
+elem8 = WebDriverWait(driver, 0).until(EC.presence_of_element_located((By.XPATH, "/html/body/div/div/div[2]/div/div/div[2]/div/div/section[1]/div/div/form/div/div/div[1]/div[2]/div/select")))
+select = Select(elem8)
+Select.select_by_index(0)
+
+elem9 = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'btn-primary.btn.ng-scope')))
+
+i = 0
+
+for fechainicio, fechafinal in fechas:
+    print(fechainicio, fechafinal)
+    elem6.clear()  # clear the input field before sending the date
+    elem6.send_keys(fechainicio)
+    print(fechainicio)
+    elem7.clear()  # clear the input field before sending the date
+    elem7.send_keys(fechafinal)
+    print(fechafinal)
+    elem9 = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'btn-primary.btn.ng-scope')))
+    elem9.click()
+    print("busqueda")
+    time.sleep(1.5)
+    elem10 = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "btn.btn-labeled.btn-secondary.mb-2")))
+    elem10.click()
+    print("descarga")
+    
+        
+
+
+
+
+    
+
 
 
 
